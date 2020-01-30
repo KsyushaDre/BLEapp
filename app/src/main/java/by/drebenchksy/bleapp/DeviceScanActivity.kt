@@ -85,13 +85,7 @@ class DeviceScanActivity : AppCompatActivity() {
                     val device = result?.device
                     BLEDevices.devices.add(BLEDevice(device, device!!.name, device.address))
                     adapter.notifyDataSetChanged()
-//                if (device?.address == SPECIFIC_SENSOR_ADDRESS) {
-//                    Log.i(TAG, "Device found: ${device.address}")
-//                    bluetoothDevice = device
-//                    bluetoothGatt = device.connectGatt(context, false, gattCallback())
-//                } else {
-//                    Log.i(TAG, "leScanCallback: device not found")
-//                }
+
                 }
 
                 override fun onBatchScanResults(results: List<ScanResult?>?) {

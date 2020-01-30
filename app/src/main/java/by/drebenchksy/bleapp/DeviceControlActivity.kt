@@ -66,12 +66,10 @@ class DeviceControlActivity: AppCompatActivity() {
         expandableListView.setOnChildClickListener { expListView, view, groupPosition, childPosition, id ->
             val characteristics = mGattCharacteristics[groupPosition]
             val charact = characteristics[childPosition]
-//            serviceBle?.readCharacteristic(charact)
-//            serviceBle?.getGattCallback()?.enableCharacteristicNotification(charact, true)
-//            serviceBle?.getGattCallback()?.writeCharacteristicData(charact)
+
             serviceBle?.getGattCallback()?.setCharacteristicAuth(charact)
             serviceBle?.getGattCallback()?.enableNotificationsForAuth(charact)
-//            serviceBle?.getGattCallback()?.writeCharacteristicData(charact)
+
             false
         }
     }
@@ -113,8 +111,6 @@ class DeviceControlActivity: AppCompatActivity() {
 
 
     private val gattUpdateReceiver = object : BroadcastReceiver() {
-
-//        private lateinit var bluetoothLeService: BluetoothLeService
 
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action

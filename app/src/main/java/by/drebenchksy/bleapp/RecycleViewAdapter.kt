@@ -16,29 +16,26 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
 
-class RecycleViewAdapter(val devices: ArrayList<BLEDevice>, val context: Context) : RecyclerView.Adapter<RecycleViewAdapter.DeviceViewHolder?>() {
+class RecycleViewAdapter(val devices: ArrayList<BLEDevice>, val context: Context) :
+    RecyclerView.Adapter<RecycleViewAdapter.DeviceViewHolder?>() {
 
 
-
-   inner class DeviceViewHolder internal constructor(itemView: View) : ViewHolder(itemView) {
+    inner class DeviceViewHolder internal constructor(itemView: View) : ViewHolder(itemView) {
         var cv: CardView
         var deviceNameTV: TextView
         var deviceAddressTV: TextView
         var device: BluetoothDevice? = null
+
         init {
             cv = itemView.findViewById(R.id.cv)
             deviceNameTV = itemView.findViewById(R.id.device_name)
             deviceAddressTV = itemView.findViewById(R.id.device_address)
 
             itemView.setOnClickListener {
-//                val myService = BluetoothLeService(device, "BluetoothLeService.java")
-//                val intent = Intent(context, ServiceBle::class.java)
-//                intent.putExtra("device", device)
                 val intent = Intent(context, DeviceControlActivity::class.java)
                 intent.putExtra("device", device)
                 context.startActivity(intent)
-//                DeviceScanActivity.serviceBle?.setBluetoothDevice(device)
-//                DeviceControlActivity.serviceBle?.enableCharacteristicNotification()
+
                 Log.i("AAA", "Item clicked")
             }
         }
@@ -61,18 +58,15 @@ class RecycleViewAdapter(val devices: ArrayList<BLEDevice>, val context: Context
         if (devices[position].device != null) holder.device = devices[position].device
 
         if (devices[position].deviceName != null) {
-            holder.deviceNameTV.text =devices[position].deviceName
-        } else{
+            holder.deviceNameTV.text = devices[position].deviceName
+        } else {
             holder.deviceNameTV.text = "null"
         }
 
         if (devices[position].deviceAddress != null) {
-            holder.deviceAddressTV.text =devices[position].deviceAddress
-        } else{
+            holder.deviceAddressTV.text = devices[position].deviceAddress
+        } else {
             holder.deviceAddressTV.text = "null"
         }
     }
-
-
-
 }

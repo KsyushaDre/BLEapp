@@ -12,7 +12,6 @@ import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
 
-
 const val ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
 const val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
 const val ACTION_GATT_SERVICES_DISCOVERED =
@@ -23,17 +22,14 @@ val UUID_HEART_RATE_MEASUREMENT = UUID.fromString(SampleGattAttributes.HEART_RAT
 
 class ServiceBle : Service() {
 
-
     private var device: BluetoothDevice? = null
     private var bluetoothGatt: BluetoothGatt? = null
 
     private val binder = MyBinder()
 
+    private val gattCallback = MyGattCallback(this)
 
-
-     private val gattCallback = MyGattCallback(this)
-
-    fun getGattCallback (): MyGattCallback{
+    fun getGattCallback(): MyGattCallback {
         return gattCallback
     }
 
@@ -70,12 +66,7 @@ class ServiceBle : Service() {
     }
 
 
-
-
-
-
-
-    fun readCharacteristic (characteristic: BluetoothGattCharacteristic) {
+    fun readCharacteristic(characteristic: BluetoothGattCharacteristic) {
         Log.i("AAA", "readCharacteristic method, characteristic: ${characteristic.uuid}")
         bluetoothGatt?.readCharacteristic(characteristic)
     }

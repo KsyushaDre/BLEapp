@@ -44,7 +44,7 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         bluetoothGattInGattCallback = gatt
     }
 
-    fun setCharacteristicAuth (characteristic: BluetoothGattCharacteristic) {
+    fun setCharacteristicAuth(characteristic: BluetoothGattCharacteristic) {
         characteristicAuth = characteristic
     }
 
@@ -88,24 +88,13 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         status: Int,
         newState: Int
     ) {
-        val intentAction: String
         when (newState) {
             BluetoothProfile.STATE_CONNECTED -> {
-//                intentAction = ACTION_GATT_CONNECTED
-//                connectionState = STATE_CONNECTED
-//                broadcastUpdate(intentAction)
                 bleHandler.obtainMessage(MSG_DISCOVER_SERVICES, gatt).sendToTarget();
                 Log.i("AAA", "Connected to GATT server.")
-//                Log.i(
-//                    "AAA", "Attempting to start service discovery: " +
-//                            gatt.discoverServices()
-//                )
             }
             BluetoothProfile.STATE_DISCONNECTED -> {
-//                intentAction = ACTION_GATT_DISCONNECTED
-//                connectionState = STATE_DISCONNECTED
                 Log.i("AAA", "Disconnected from GATT server.")
-//                broadcastUpdate(intentAction)
                 bleHandler.obtainMessage(MSG_GATT_DISCONNECTED, gatt).sendToTarget()
             }
             else -> Log.i("AAA", "onConnectionStateChange, status: $status")
@@ -115,8 +104,7 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
     // New services discovered
     override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
         when (status) {
-            BluetoothGatt.GATT_SUCCESS -> {
-//                broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
+            GATT_SUCCESS -> {
                 Log.i("AAA", "onServicesDiscovered(), GATT_SUCCESS")
                 bleHandler.obtainMessage(MSG_SERVICES_DISCOVERED, gatt).sendToTarget();
             }
@@ -135,26 +123,8 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
     ) {
         Log.i("AAA", "onCharacteristicRead, status: $status")
         when (status) {
-            BluetoothGatt.GATT_SUCCESS -> {
+            GATT_SUCCESS -> {
                 bleHandler.obtainMessage(MSG_DATA_READ, characteristic).sendToTarget();
-//                broadcastUpdate(ACTION_DATA_AVAILABLE, )
-
-                val value = characteristic.value
-                if (value[0] == 0x10.toByte() && value[1] == 0x01.toByte() && value[2] == 0x01.toByte()) {
-                    Log.i("AAA", "FIRST step in auth was successful")
-                    tryTwoStepAuth(characteristicAuth)
-                }
-
-                if (value[0] == 0x10.toByte() && value[1] == 0x02.toByte() && value[2] == 0x01.toByte()) {
-                    Log.i("AAA", "SECOND step in auth was successful")
-                    tryThreeStepAuth(characteristicAuth)
-                }
-
-                if (value[0] == 0x10.toByte() && value[1] == 0x03.toByte() && value[2] == 0x01.toByte()) {
-                    Log.i("AAA", "THIRD step in auth was successful")
-//            setHeartMeasurementNotification()
-//        }
-                }
             }
         }
     }
@@ -192,10 +162,6 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         status: Int
     ) {
         Log.i("AAA", "onCharacteristicWrite(), status $status")
-        if (status == GATT_SUCCESS) {
-//            setNotify(characteristic, true)
-//            bluetoothGattInGattCallback?.readCharacteristic(characteristic)
-        }
     }
 
 
@@ -207,7 +173,7 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         Log.i("AAA", "onDescriptorWrite(), status $status")
         val characteristic = descriptor?.characteristic
 
-        if (characteristic?.uuid == UUID.fromString("00000009-0000-3512-2118-0009af100700") ) {
+        if (characteristic?.uuid == UUID.fromString("00000009-0000-3512-2118-0009af100700")) {
             if (descriptor?.uuid == UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG)) {
                 if (status == GATT_SUCCESS) {
                     val value = descriptor?.value
@@ -221,14 +187,17 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
             }
         }
 
-        if (characteristic?.uuid == UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")){
+        if (characteristic?.uuid == UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")) {
             if (descriptor?.uuid == UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG)) {
                 if (status == GATT_SUCCESS) {
                     val value = descriptor?.value
                     if (value != null) {
                         if (value[0] != 0.toByte()) {
                             Log.i("AAA", "onDescriptorWrite(), value[0] != 0.toByte() is true")
-                            Log.i("AAA", "onDescriptorWrite(), heartRateMeasurementNotification is on")
+                            Log.i(
+                                "AAA",
+                                "onDescriptorWrite(), heartRateMeasurementNotification is on"
+                            )
 
                         }
                     }
@@ -287,34 +256,7 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
     }
 
 
-    fun setNotify(characteristic: BluetoothGattCharacteristic?, enabled: Boolean) {
-        bleHandler.post {
-            bluetoothGattInGattCallback?.setCharacteristicNotification(characteristic, enabled)
-            val descriptor: BluetoothGattDescriptor? =
-                characteristic?.getDescriptor(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG))
-
-            var value: ByteArray? = byteArrayOf()
-            val properties = characteristic?.properties
-
-            value = if (properties!! and PROPERTY_NOTIFY > 0) {
-                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            } else if (properties and PROPERTY_INDICATE > 0) {
-                BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
-            } else {
-                null
-            }
-
-            val finalValue =
-                if (enabled) value!! else BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
-
-            descriptor?.setValue(finalValue)
-            bluetoothGattInGattCallback?.writeDescriptor(descriptor)
-        }
-
-    }
-
-
-    fun writeCharacteristicData(characteristic: BluetoothGattCharacteristic) {
+    private fun writeCharacteristicData(characteristic: BluetoothGattCharacteristic) {
         bleHandler.post {
             characteristic.setValue(
                 byteArrayOf(
@@ -342,7 +284,7 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         }
     }
 
-     fun enableNotificationsForAuth(chrt: BluetoothGattCharacteristic) {
+    fun enableNotificationsForAuth(chrt: BluetoothGattCharacteristic) {
         bleHandler.post {
             bluetoothGattInGattCallback?.setCharacteristicNotification(chrt, true)
             for (descriptor in chrt.descriptors) {
@@ -359,70 +301,6 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
         }
     }
 
-    fun enableCharacteristicNotification(
-        characteristic: BluetoothGattCharacteristic,
-        enabled: Boolean
-    ) {
-        Log.i(
-            "AAA",
-            "enableCharacteristicNotification method, characteristic: ${characteristic.uuid}"
-        )
-
-        bluetoothGattInGattCallback?.setCharacteristicNotification(characteristic, enabled)
-        Log.i(
-            "AAA",
-            "enableCharacteristicNotification method, setCharacteristicNotification: ${bluetoothGattInGattCallback?.setCharacteristicNotification(
-                characteristic,
-                enabled
-            )}"
-        )
-        val uuid: UUID = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG)
-
-        for (descriptor: BluetoothGattDescriptor in characteristic.descriptors) {
-            if (descriptor.uuid == UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")) {
-                Log.i("AAA", "Found NOTIFICATION BluetoothGattDescriptor: ${descriptor.uuid}")
-                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-
-                descriptorAuth = descriptor
-                characteristicAuth = characteristic
-
-                characteristic.value = byteArrayOf(
-                    0x01,
-                    0x8,
-                    0x30,
-                    0x31,
-                    0x32,
-                    0x33,
-                    0x34,
-                    0x35,
-                    0x36,
-                    0x37,
-                    0x38,
-                    0x39,
-                    0x40,
-                    0x41,
-                    0x42,
-                    0x43,
-                    0x44,
-                    0x45
-                )
-                bluetoothGattInGattCallback?.writeCharacteristic(characteristic)
-            }
-        }
-
-
-        if (UUID_HEART_RATE_MEASUREMENT == characteristic.uuid) {
-            val descriptor = characteristic.getDescriptor(uuid)?.apply {
-                value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-            }
-            Log.i(
-                "AAA",
-                "enableCharacteristicNotification method, descriptor: ${descriptor.toString()}"
-            )
-            bluetoothGattInGattCallback?.writeDescriptor(descriptor)
-        }
-    }
-
 
     private fun tryTwoStepAuth(charact: BluetoothGattCharacteristic?) {
         Log.i("AAA", "tryTwoStepAuth() method")
@@ -432,15 +310,17 @@ class MyGattCallback(val context: Context) : BluetoothGattCallback(), Handler.Ca
             if (bluetoothGattInGattCallback != null && charact != null) {
                 bluetoothGattInGattCallback?.writeCharacteristic(charact)
             } else {
-                Log.i("AAA", "tryTwoStepAuth bluetoothGattInGattCallback $bluetoothGattInGattCallback, charact $charact")
+                Log.i(
+                    "AAA",
+                    "tryTwoStepAuth bluetoothGattInGattCallback $bluetoothGattInGattCallback, charact $charact"
+                )
             }
         }
-
     }
 
     private fun tryThreeStepAuth(charact: BluetoothGattCharacteristic?) {
         Log.i("AAA", "tryThreeStepAuth() method")
-//        descriptor?.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+
         bleHandler.post {
             val value: ByteArray
             val tmpValue: ByteArray
